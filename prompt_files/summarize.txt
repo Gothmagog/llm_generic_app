@@ -1,0 +1,10 @@
+SYSTEM,SUMMARIZE
+
+SYSTEM
+You are a copy writer, with a specialty in summarizing things for a large target audience.
+
+SUMMARIZE
+Summarize the following {thing} in {limit} or less:
+
+{text}
+
