@@ -15,23 +15,25 @@ pip install -r requirements
 ```
 usage: python main.py [-h] [-e {bedrock,localhost}] [-m MODEL] [-a AWS_PROFILE] -f
                   PROMPT_FILE -p PROMPT [-k KEY] [-v VALUE] [-t TEMPERATURE]
-                  [-n NUM] [-s]
+                  [-n NUM] [-s] [-r REBUFF_PROMPT] [-y API_KEY]
 ```
 ## Arguments
 ### Quick reference table
-|Short|Long           |Default                                    |Description                                                                                                                                                                                              |
-|-----|---------------|-------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|`-h` |`--help`       |                                           |show this help message and exit                                                                                                                                                                          |
-|`-e` |`--endpoint`   |`bedrock`                                  |The endpoint serving the model                                                                                                                                                                           |
-|`-m` |`--model`      |`anthropic.claude-3-5-sonnet-20240620-v1:0` when endpoint=bedrock, otherwise `local`|The model identifier                                                                                                                                             |
-|`-a` |`--aws-profile`|`None`                                     |The AWS profile to use in your credentials file                                                                                                                                                          |
-|`-f` |`--prompt-file`|`None`                                     |The flat file containing all the prompts that might be used (the system prompt must be tagged SYSTEM)                                                                                                    |
-|`-p` |`--prompt`     |`None`                                     |This is the name of the section in the prompts flat file to use for the prompt. Can be a comma-delimited list, in which case the prompts alternate between human and assistant, for few-shot engineering.|
-|`-k` |`--key`        |`None`                                     |Can be used to pass in arguments to the prompt template. Can be specified multiple times.                                                                                                                |
-|`-v` |`--value`      |`None`                                     |Can be used to pass in arguments to the prompt template. Can be specified multiple times.                                                                                                                |
-|`-t` |`--temperature`|`0.0`                                      |The model temperature (defaults to zero)                                                                                                                                                                 |
-|`-n` |`--num`        |`1`                                        |The number of choices to generate (defaults to one)                                                                                                                                                      |
-|`-s` |`--exclude-sys`|                                           |Flag indicating whether to ignore the system prompt in the prompt file (defaults to False)                                                                                                               |
+|Short|Long             |Default       |Description                                                                                                                                                                                              |
+|-----|-----------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|`-h` |`--help`         |              |show this help message and exit                                                                                                                                                                          |
+|`-e` |`--endpoint`     |`bedrock`     |The endpoint serving the model                                                                                                                                                                           |
+|`-m` |`--model`        |`anthropic.claude-3-5-sonnet-20240620-v1:0` when endpoint=bedrock, otherwise `local`|The model identifier                                                                                                               |
+|`-a` |`--aws-profile`  |`None`        |The AWS profile to use in your credentials file                                                                                                                                                          |
+|`-f` |`--prompt-file`  |`None`        |The flat file containing all the prompts that might be used (the system prompt must be tagged SYSTEM)                                                                                                    |
+|`-p` |`--prompt`       |`None`        |This is the name of the section in the prompts flat file to use for the prompt. Can be a comma-delimited list, in which case the prompts alternate between human and assistant, for few-shot engineering.|
+|`-k` |`--key`          |`None`        |Can be used to pass in arguments to the prompt template. Can be specified multiple times.                                                                                                                |
+|`-v` |`--value`        |`None`        |Can be used to pass in arguments to the prompt template. Can be specified multiple times.                                                                                                                |
+|`-t` |`--temperature`  |`0.0`         |The model temperature (defaults to zero)                                                                                                                                                                 |
+|`-n` |`--num`          |`1`           |The number of choices to generate (defaults to one)                                                                                                                                                      |
+|`-s` |`--exclude-sys`  |              |Flag indicating whether to ignore the system prompt in the prompt file (defaults to False)                                                                                                               |
+|`-r` |`--rebuff-prompt`|`None`        |When provided, scan the LLM output for refusals, and if a refusal is detected use the indicated prompt to reply.                                                                                         |
+|`-y` |`--api-key`      |`token-abc123`|When using a locally-hosted model, this is the OpenAI key to pass in.                                                                                                                                    |
 
 ### `-h`, `--help`
 show this help message and exit
@@ -39,8 +41,8 @@ show this help message and exit
 ### `-e`, `--endpoint` (Default: bedrock)
 The endpoint serving the model
 
-### `-m`, `--model` (Default: anthropic.claude-3-5-sonnet-20240620-v1:0)
-The model identifier (not required when --endpoint=locahost)
+### `-m`, `--model` (Default: `anthropic.claude-3-5-sonnet-20240620-v1:0` when endpoint=bedrock, otherwise `local`)
+The model identifier
 
 ### `-a`, `--aws-profile` (Default: None)
 The AWS profile to use in your credentials file
@@ -71,6 +73,13 @@ The number of choices to generate (defaults to one)
 ### `-s`, `--exclude-sys`
 Flag indicating whether to ignore the system prompt in the prompt file
 (defaults to False)
+
+### `-r`, `--rebuff-prompt` (Default: None)
+When provided, scan the LLM output for refusals, and if a refusal is detected
+use the indicated prompt to reply.
+
+### `-y`, `--api-key` (Default: token-abc123)
+When using a locally-hosted model, this is the OpenAI key to pass in.
 
 # Prompt Files
 This app uses flat text files to read prompts from, which makes it very simple to edit and refine prompts. The text files themselves have a specific (simple) format, detailed as follows.
@@ -110,5 +119,15 @@ For debugging purposes, the application outputs the template args dictionary, as
 
 ```
 {'thing': 'movie', 'limit': '100 words', 'text': 'Dark City'}
-"Dark City" is a neo-noir science fiction thriller that follows John Murdoch, a man who awakens with amnesia in a mysterious, perpetually dark metropolis. As he investigates his past and a series of murders he's accused of, he discovers a sinister group called the Strangers controlling the city and its inhabitants. These alien beings conduct nightly experiments, altering people's memories and the city's physical structure. Murdoch develops psychokinetic powers similar to the Strangers and becomes humanity's only hope against their manipulation. With the help of a detective and a doctor, he unravels the truth about the city and fights to save its residents from eternal enslavement.
+"Dark City" is a neo-noir science fiction thriller that follows John
+Murdoch, a man who awakens with amnesia in a mysterious, perpetually
+dark metropolis. As he investigates his past and a series of murders
+he's accused of, he discovers a sinister group called the Strangers
+controlling the city and its inhabitants. These alien beings conduct
+nightly experiments, altering people's memories and the city's
+physical structure. Murdoch develops psychokinetic powers similar to
+the Strangers and becomes humanity's only hope against their
+manipulation. With the help of a detective and a doctor, he unravels
+the truth about the city and fights to save its residents from eternal
+enslavement.
 ```
