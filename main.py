@@ -60,18 +60,19 @@ class PromptsConfig:
         return self.prompts_dict[prompt_id]
 
 parser = ArgumentParser()
-parser.add_argument("-e", "--endpoint", required=False, help="The endpoint serving the model", choices=["bedrock", "localhost"], default="bedrock")
-parser.add_argument("-m", "--model", required=False, help="The model identifier (not required when --endpoint=locahost)")
+parser.add_argument("-e", "--endpoint", required=False, help="The type of endpoint serving the model", choices=["bedrock", "localhost"], default="bedrock")
+parser.add_argument("-m", "--model", required=False, help="The model identifier")
 parser.add_argument("-a", "--aws-profile", required=False, help="The AWS profile to use in your credentials file")
 parser.add_argument("-f", "--prompt-file", required=True, help="The flat file containing all the prompts that might be used (the system prompt must be tagged SYSTEM)")
 parser.add_argument("-p", "--prompt", required=True, help="This is the name of the section in the prompts flat file to use for the prompt. Can be a comma-delimited list, in which case the prompts alternate between human and assistant, for few-shot engineering.")
 parser.add_argument("-k", "--key", action="append", help="Can be used to pass in arguments to the prompt template. Can be specified multiple times.")
-parser.add_argument("-v", "--value", action="append", help="Can be used to pass in arguments to the prompt template. Can be specified multiple times.")
+parser.add_argument("-v", "--value", action="append", help="Can be used to pass in arguments to the prompt template. Can be specified multiple times. Prepend '@' to indicate a file location whose contents will be read into the template variable value.")
 parser.add_argument("-t", "--temperature", required=False, type=float, default=0.0, help="The model temperature (defaults to zero)")
 parser.add_argument("-n", "--num", required=False, type=int, default=1, help="The number of choices to generate (defaults to one)")
 parser.add_argument("-s", "--exclude-sys", required=False, action="store_true", help="Flag indicating whether to ignore the system prompt in the prompt file (defaults to False)")
 parser.add_argument("-r", "--rebuff-prompt", required=False, help="When provided, scan the LLM output for refusals, and if a refusal is detected use the indicated prompt to reply.")
 parser.add_argument("-y", "--api-key", required=False, help="When using a locally-hosted model, this is the OpenAI key to pass in.", default="token-abc123")
+
 args = parser.parse_args()
 
 pconfig = PromptsConfig(args.prompt_file)

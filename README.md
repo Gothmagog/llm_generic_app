@@ -22,13 +22,13 @@ usage: python main.py [-h] [-e {bedrock,localhost}] [-m MODEL] [-a AWS_PROFILE] 
 |Short|Long             |Default       |Description                                                                                                                                                                                              |
 |-----|-----------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 |`-h` |`--help`         |              |show this help message and exit                                                                                                                                                                          |
-|`-e` |`--endpoint`     |`bedrock`     |The endpoint serving the model                                                                                                                                                                           |
+|`-e` |`--endpoint`     |`bedrock`     |The type of endpoint serving the model                                                                                                                                                                   |
 |`-m` |`--model`        |`anthropic.claude-3-5-sonnet-20240620-v1:0` when endpoint=bedrock, otherwise `local`|The model identifier                                                                                                               |
 |`-a` |`--aws-profile`  |`None`        |The AWS profile to use in your credentials file                                                                                                                                                          |
 |`-f` |`--prompt-file`  |`None`        |The flat file containing all the prompts that might be used (the system prompt must be tagged SYSTEM)                                                                                                    |
 |`-p` |`--prompt`       |`None`        |This is the name of the section in the prompts flat file to use for the prompt. Can be a comma-delimited list, in which case the prompts alternate between human and assistant, for few-shot engineering.|
 |`-k` |`--key`          |`None`        |Can be used to pass in arguments to the prompt template. Can be specified multiple times.                                                                                                                |
-|`-v` |`--value`        |`None`        |Can be used to pass in arguments to the prompt template. Can be specified multiple times.                                                                                                                |
+|`-v` |`--value`        |`None`        |Can be used to pass in arguments to the prompt template. Can be specified multiple times. Prepend '@' to indicate a file location whose contents will be read into the template variable value.          |
 |`-t` |`--temperature`  |`0.0`         |The model temperature (defaults to zero)                                                                                                                                                                 |
 |`-n` |`--num`          |`1`           |The number of choices to generate (defaults to one)                                                                                                                                                      |
 |`-s` |`--exclude-sys`  |              |Flag indicating whether to ignore the system prompt in the prompt file (defaults to False)                                                                                                               |
@@ -39,9 +39,9 @@ usage: python main.py [-h] [-e {bedrock,localhost}] [-m MODEL] [-a AWS_PROFILE] 
 show this help message and exit
 
 ### `-e`, `--endpoint` (Default: bedrock)
-The endpoint serving the model
+The type of endpoint serving the model
 
-### `-m`, `--model` (Default: `anthropic.claude-3-5-sonnet-20240620-v1:0` when endpoint=bedrock, otherwise `local`)
+### `-m`, `--model` (Default: None)
 The model identifier
 
 ### `-a`, `--aws-profile` (Default: None)
@@ -62,7 +62,8 @@ multiple times.
 
 ### `-v`, `--value` (Default: None)
 Can be used to pass in arguments to the prompt template. Can be specified
-multiple times.
+multiple times. Prepend '@' to indicate a file location whose contents will be
+read into the template variable value.
 
 ### `-t`, `--temperature` (Default: 0.0)
 The model temperature (defaults to zero)
