@@ -16,7 +16,7 @@ from langchain_core.messages.ai import AIMessage
 from pathlib import Path
 from argparse import ArgumentParser
 from openai import OpenAI
-from llm_guard.output_scanners import NoRefusalLight
+# from llm_guard.output_scanners import NoRefusalLight
 
 #logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger()
@@ -29,7 +29,7 @@ class PromptsConfig:
         self.prompts_dict = {}
 
     def fetch(self):
-        text = self.file.read_text()
+        text = self.file.read_text(encoding="utf-8")
         if text != self.full_text:
             self.full_text = text
             self.parse_full_text()
