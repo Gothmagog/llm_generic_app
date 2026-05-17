@@ -1,5 +1,6 @@
 #!/bin/python
 
+import sys
 import re
 import logging
 from pathlib import Path
@@ -55,6 +56,7 @@ parser.add_argument("-p", "--prompt", required=False, help="This is the name of 
 parser.add_argument("-k", "--key", action="append", help="Can be used to pass in arguments to the prompt template. Can be specified multiple times.")
 parser.add_argument("-v", "--value", action="append", help="Can be used to pass in arguments to the prompt template. Can be specified multiple times. Prepend '@' to indicate a file location whose contents will be read into the template variable value.")
 parser.add_argument("-t", "--temperature", required=False, type=float, default=0.0, help="The model temperature (defaults to zero)")
+parser.add_argument("-i", "--thinking", required=False, type=int, default=0, help="The number of tokens to budget for thinking; when this isn't specified, thinking isn't enabled")
 parser.add_argument("-n", "--num", required=False, type=int, default=1, help="The number of choices to generate (defaults to one)")
 parser.add_argument("-s", "--exclude-sys", required=False, action="store_true", help="Flag indicating whether to ignore the system prompt in the prompt file (defaults to False)")
 parser.add_argument("-c", "--completion", required=False, help="Override the usual chat prompting approach and leverage the completion endpoint to complete the text given in this argument. This flag is used exclusively to the -f and -p arguments. Only usable with localhost engine type.")
@@ -66,16 +68,18 @@ args = parser.parse_args()
 
 from botocore.config import Config
 from langchain_aws import ChatBedrock
-from langchain.prompts.chat import (
+from langchain_core.prompts import (
     ChatPromptTemplate,
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
     AIMessagePromptTemplate,
     MessagesPlaceholder
 )
-from langchain_core.messages.system import SystemMessage
-from langchain_core.messages.human import HumanMessage
-from langchain_core.messages.ai import AIMessage
+from langchain.messages import (
+    SystemMessage,
+    HumanMessage,
+    AIMessage
+)
 from openai import OpenAI
 from transformers import AutoTokenizer
 # from llm_guard.output_scanners import NoRefusalLight
@@ -87,6 +91,9 @@ if args.completion and (args.endpoint != "localhost" or args.prompt or args.prom
 elif not args.completion and (not args.prompt or not args.prompt_file):
     print("ERROR: Pass in either -f and -p, or -c")
     exit()
+if args.thinking and args.temperature != 1.0:
+    print("WARN: When using thinking, temperature MUST be 1.0; forcing temperature to be 1.0")
+    args.temperature = 1.0
 
 pconfig = None
 if args.prompt_file:
@@ -123,11 +130,17 @@ def get_prompt_templates(prompt_titles):
 
 def invoke_bedrock(prompt, llm, template_args):
     runnable = prompt | llm
-    resp = runnable.stream(template_args)
     ttl_resp = ""
+    resp = runnable.stream(template_args)
     for chunk in resp:
-        print(chunk.content, end="", flush=True)
-        ttl_resp += chunk.content
+        if type(chunk.content) is str:
+            print(chunk.content, end="", flush=True)
+            ttl_resp += chunk.content
+        elif type(chunk.content) is list and len(chunk.content):
+            for dict_ in chunk.content:
+                if "text" in dict_:
+                    print(dict_["text"], end="", flush=True)
+                    ttl_resp += dict_["text"]
     return ttl_resp
 
 def print_openai_resp(resp):
@@ -158,12 +171,19 @@ if args.endpoint == "bedrock":
         model = args.model
 
 
+    model_kwargs = {
+        "max_tokens": 8192,
+        "temperature": args.temperature
+    }
+    if args.thinking:
+        model_kwargs["max_tokens"] += args.thinking
+        model_kwargs["thinking"] = {
+            "type": "enabled",
+            "budget_tokens": args.thinking
+        }
     llm = ChatBedrock(
         model_id=model,
-        model_kwargs={
-            "max_tokens": 8192,
-            "temperature": args.temperature
-        },
+        model_kwargs=model_kwargs,
         config=Config(connect_timeout=120, read_timeout=120, retries={"mode": "adaptive"}),
         streaming=True,
         credentials_profile_name=profile_name
